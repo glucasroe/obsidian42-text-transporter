@@ -118,7 +118,17 @@ export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLo
     }
 }
 
-//Copies current file to clipbaord as a link or sends it to another file
+// push text, leave a block reference
+export async function pushTextLeaveBlockReference(plugin: ThePlugin, defaultSelectionText = ""): Promise<void> {
+    //append text with a block id. Capture the block id
+    //push the text to a new file, capturing the file name 
+    // copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(this.plugin, copySelection: false);
+    //drop link with filename + blockID
+    
+}
+
+
+//Copies current file to clipboard as a link or sends it to another file
 export async function copyCurrentFileNameAsLinkToNewLocation(plugin: ThePlugin, copyToCliboard: boolean): Promise<void> {
     const fileLink= "[[" + getUniqueLinkPath( getActiveView(plugin).file.path ) + "]]"
     if(copyToCliboard) {
