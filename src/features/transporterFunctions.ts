@@ -15,7 +15,7 @@ export function cleanupHeaderNameForBlockReference(header: string): string {
 // optionally copies them to clipboard
 export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipbard: boolean, copyAsAlias = false, aliasText = "*"): Promise<Array<string>> {
     const activeView = getActiveView(plugin);
-    const activeEditor = activeView.editor;    
+    const activeEditor = activeView.editor;
     const f = new FileCacheAnalyzer(plugin, activeView.file.path);
     const curSels = activeEditor.listSelections();
     const blockRefs = [];
@@ -49,7 +49,7 @@ export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipbard:
     if (copyToClipbard && blockRefs.length > 0) {
         let block = "";
         const blockPrefix = copyAsAlias === false ? "!" : ""; //if alias, don't do embed preview
-        aliasText = copyAsAlias === true ? "|" + aliasText : "";    
+        aliasText = copyAsAlias === true ? "|" + aliasText : "";
         const uniqueLinkPath = getUniqueLinkPath(activeView.file.path);
         blockRefs.forEach(b => block += `${blockPrefix}[[${uniqueLinkPath}${b}${aliasText}]]\n`);
         navigator.clipboard.writeText(block).then(text => text);
@@ -70,7 +70,7 @@ export async function copyOrPushLineOrSelectionToNewLocation(plugin: ThePlugin, 
     newContents = newContents.substring(0, newContents.length - 1);
     await plugin.app.vault.adapter.write(targetFileName, newContents);
     if (copySelection === false) {//this  is  a move, so delete the selection
-        const activeEditor = getActiveView(plugin).editor;    
+        const activeEditor = getActiveView(plugin).editor;
         const currentLine = activeEditor.getCursor().line;
         const textSelection = activeEditor.getSelection();
         if (textSelection === "" || activeEditor.getLine(currentLine).length === textSelection.length)
@@ -78,7 +78,7 @@ export async function copyOrPushLineOrSelectionToNewLocation(plugin: ThePlugin, 
         else
             activeEditor.replaceSelection(""); //replace whatever is the  selection
     }
-} 
+}
 
 // Copies or pushes (transfers) the current line or selection to another file
 // copySelection = true for copy, false for move
@@ -95,7 +95,7 @@ export async function copyOrPushLineOrSelectionToNewLocationWithFileLineSuggeste
             openFileInObsidian(plugin, targetFileName, lineNumber + 1, lineCount)
         }
     });
-} 
+}
 
 // this is primarily used by the context menu for doing copy/push actions
 export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLocationAndBoomark(plugin: ThePlugin, copySelection: boolean, bookmarkText: string, evt?: MouseEvent | KeyboardEvent): Promise<void> {
@@ -105,7 +105,7 @@ export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLo
     else if(bookmarkInfo.errorNumber===2)
         new Notice("File as defined in the bookmark does not exist.");
     else {
-        const activeEditor = getActiveView(plugin).editor;    
+        const activeEditor = getActiveView(plugin).editor;
         const currentLine = activeEditor.getCursor().line;
         let textSelection = activeEditor.getSelection();
         if (textSelection === "") textSelection = activeEditor.getLine(currentLine); //get text from current line
@@ -119,13 +119,18 @@ export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLo
 }
 
 // push text, leave a block reference
+/* !Push Text Leave Block Reference */
+
 export async function pushTextLeaveBlockReference(plugin: ThePlugin, defaultSelectionText = ""): Promise<void> {
     //append text with a block id. Capture the block id
-    //push the text to a new file, capturing the file name 
-    // copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(this.plugin, copySelection: false);
-    //drop link with filename + blockID
-    
+    // const refIDBuffer = async (): Promise<Array<string>> => transporter.addBlockRefsToSelection(this.plugin, true, true, this.plugin.settings.blockRefAliasIndicator)
+    addBlockRefsToSelection(plugin, copyToClipbard)
+    copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, copySelection)
+    pullBlockReferenceFromAnotherFile(plugin);
+
+
 }
+
 
 
 //Copies current file to clipboard as a link or sends it to another file
@@ -164,7 +169,7 @@ export async function pushBlockReferenceToAnotherFile(plugin: ThePlugin): Promis
             }
         }
     });
-} 
+}
 
 // Pull (move) a line or lines from another file
 export async function copyOrPulLineOrSelectionFromAnotherLocation(plugin: ThePlugin, copySelection: boolean): Promise<void> {
@@ -192,8 +197,7 @@ export async function copyOrPulLineOrSelectionFromAnotherLocation(plugin: ThePlu
 }
 
 // pull a block reference from another file and insert into the current location
-export async function pullBlockReferenceFromAnotherFile(plugin: ThePlugin): Promise<void> {
-    await displayFileLineSuggester(plugin, true, false, true, async (targetFileName, fileContentsArray, startLine, endLine, evtFileSelected, evtFirstLine, evetLastLine) => {
+export async function pullBlockReferenceFromAnotherFile(plugin: ThePlugin): Promise<void> {    await displayFileLineSuggester(plugin, true, false, true, async (targetFileName, fileContentsArray, startLine, endLine, evtFileSelected, evtFirstLine, evetLastLine) => {
         startLine = startLine === -1 ? startLine = 0 : startLine;
         endLine = endLine === -1 ? endLine = 0 : endLine;
         const f = new FileCacheAnalyzer(plugin, targetFileName);
@@ -244,11 +248,11 @@ export async function pullBlockReferenceFromAnotherFile(plugin: ThePlugin): Prom
             openFileInObsidian(plugin, targetFileName, startLine, endLine - startLine);
         }
     });
-} 
+}
 
 export function testIfCursorIsOnALink(plugin: ThePlugin): LinkCache {
     const activeView  = getActiveView(plugin);
-    const activeEditor = activeView.editor;    
+    const activeEditor = activeView.editor;
     const currentLine = activeEditor.getCursor().line;
     const cache = this.app.metadataCache.getFileCache(activeView.file);
     if (cache.links || cache.embeds || cache.headings) {
