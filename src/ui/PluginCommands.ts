@@ -84,6 +84,10 @@ export default class PluginCommands {
             command: async (): Promise<void> => transporter.pushTextLeaveBlockReference(this.plugin)
         },
         {
+            caption: "Insert filename as a link", shortcut: "CFL", group: "ToFile", editModeOnly: true, isContextMenuItem: true, cmItemEnabled: true, icon: "left-arrow-with-tail",
+            command: async (): Promise<void> => transporter.insertLinktoCurrentFileName(this.plugin)
+        },
+        {
             caption: "Send link of current note to a file", shortcut: "SLF", editModeOnly: true, group: "Send", isContextMenuItem: true, cmItemEnabled: true, icon: "paper-plane",
             command: async (): Promise<void> => transporter.copyCurrentFileNameAsLinkToNewLocation(this.plugin, false)
         },

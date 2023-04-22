@@ -13,7 +13,7 @@ export function cleanupHeaderNameForBlockReference(header: string): string {
 // loops through current selected text and adds block refs to each paragraph
 // returns all block refs found in selection
 // optionally copies them to clipboard
-export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipbard: boolean, copyAsAlias = false, aliasText = "*"): Promise<Array<string>> {
+export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipboard: boolean, copyAsAlias = false, aliasText = "*"): Promise<Array<string>> {
     const activeView = getActiveView(plugin);
     const activeEditor = activeView.editor;
     const f = new FileCacheAnalyzer(plugin, activeView.file.path);
@@ -46,7 +46,7 @@ export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipbard:
         } //selectedLineInEditor
     } //curSels
 
-    if (copyToClipbard && blockRefs.length > 0) {
+    if (copyToClipboard && blockRefs.length > 0) {
         let block = "";
         const blockPrefix = copyAsAlias === false ? "!" : ""; //if alias, don't do embed preview
         aliasText = copyAsAlias === true ? "|" + aliasText : "";
@@ -121,22 +121,27 @@ export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLo
 // push text, leave a block reference
 /* !Push Text Leave Block Reference */
 
-export async function pushTextLeaveBlockReference(plugin: ThePlugin, defaultSelectionText = ""): Promise<void> {
+export async function pushTextLeaveBlockReference(plugin: ThePlugin): Promise<void> {
     //append text with a block id. Capture the block id
     // const refIDBuffer = async (): Promise<Array<string>> => transporter.addBlockRefsToSelection(this.plugin, true, true, this.plugin.settings.blockRefAliasIndicator)
-    addBlockRefsToSelection(plugin, copyToClipbard)
-    copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, copySelection)
-    pullBlockReferenceFromAnotherFile(plugin);
+    console.log('start ptlb');
+    const blockIds = await addBlockRefsToSelection(plugin, true);
+    console.log(blockIds);
+    // const results = await addBlockRefsToSelection(plugin, false);
+    // copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, copySelection)
+    // pullBlockReferenceFromAnotherFile(plugin);
 
 
 }
 
-
+export async function insertLinktoCurrentFileName(plugin: ThePlugin): Promise<void> {
+    getActiveView(plugin).editor.replaceSelection("[[" + getUniqueLinkPath( getActiveView(plugin).file.path ) + "]]");
+}
 
 //Copies current file to clipboard as a link or sends it to another file
-export async function copyCurrentFileNameAsLinkToNewLocation(plugin: ThePlugin, copyToCliboard: boolean): Promise<void> {
+export async function copyCurrentFileNameAsLinkToNewLocation(plugin: ThePlugin, copyToClipboard: boolean): Promise<void> {
     const fileLink= "[[" + getUniqueLinkPath( getActiveView(plugin).file.path ) + "]]"
-    if(copyToCliboard) {
+    if(copyToClipboard) {
         navigator.clipboard.writeText(fileLink).then(text => text);
         new Notice(`${fileLink}\n\n Copied to the clipboard.`)
     } else
