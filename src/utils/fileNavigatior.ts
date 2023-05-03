@@ -199,9 +199,9 @@ export async function createTagBlockListChooser(plugin: ThePlugin, returnEndPoin
 // if returnEndPoint = true, another suggester is shown so user can select endpoint of selection from file
 // show top will diplsay -- top at top of suggester
 // pullTypeRequest - if it is a pull type reqeust, this should be true, some commands might need different behavior if a pull
-export async function displayFileLineSuggester(plugin: ThePlugin, returnEndPoint: boolean, showTop: boolean, pullTypeRequest: boolean, callback: FileChooserCallback): Promise<void> {
+export async function displayFileLineSuggester(plugin: ThePlugin, returnEndPoint: boolean, showTop: boolean, pullTypeRequest: boolean, callback: FileChooserCallback): Promise<string> {
     const chooser = getActiveViewType(plugin) === ViewType.none ? await createFileChooser(plugin) : await createFileChooser(plugin, getActiveView(plugin).file.path);
-    await chooser.display(async (fileSelected: SuggesterItem, evtFileSelected: MouseEvent | KeyboardEvent) => {
+    return await chooser.display(async (fileSelected: SuggesterItem, evtFileSelected: MouseEvent | KeyboardEvent) => {
         const shiftKeyUsed = evtFileSelected.shiftKey;
 
         let fileContentsStartingLine = 0;
@@ -209,15 +209,15 @@ export async function displayFileLineSuggester(plugin: ThePlugin, returnEndPoint
 
         if (targetFileName === TAG_FILE_SEARCH) {
             await createTagFileListChooser(plugin, returnEndPoint, showTop, callback);
-            return;
+            return "";
         } else if (targetFileName === TAG_BLOCK_SEARCH) {
             await createTagBlockListChooser(plugin, returnEndPoint, showTop, callback);
-            return;
+            return "";
         } else if (targetFileName.search(";") > 0) { // a bookmark was selected with a command. process callback
             const bkmkInfo = await parseBookmarkForItsElements(plugin, targetFileName, pullTypeRequest);
             if (shiftKeyUsed === false) { // bookmark location, perform the transport command
                 callback(bkmkInfo.fileName, bkmkInfo.fileBookmarkContentsArray, bkmkInfo.fileLineNumber, bkmkInfo.fileLineNumber, evtFileSelected);
-                return;
+                return "";
             } else {  // use the bookmarked location as starting point for next step in commands
                 fileContentsStartingLine = bkmkInfo.fileLineNumber;
                 targetFileName = bkmkInfo.fileName;
@@ -229,8 +229,10 @@ export async function displayFileLineSuggester(plugin: ThePlugin, returnEndPoint
         if (showTop) fileContentsArray.unshift({ display: "-- Top of file --", info: -1 });
 
         await displayFileLineSuggesterFromFileList(plugin, returnEndPoint, showTop, targetFileName, fileContentsArray, fileContentsStartingLine, evtFileSelected, callback);
+        return targetFileName;
     });
 }
+
 
 // supports displayFileLineSuggester and displayTagFileSuggester
 export async function displayFileLineSuggesterFromFileList(plugin: ThePlugin, returnEndPoint: boolean, showTop: boolean, targetFileName: string,

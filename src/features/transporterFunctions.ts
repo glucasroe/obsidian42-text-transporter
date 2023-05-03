@@ -82,20 +82,42 @@ export async function copyOrPushLineOrSelectionToNewLocation(plugin: ThePlugin, 
 
 // Copies or pushes (transfers) the current line or selection to another file
 // copySelection = true for copy, false for move
-// defaultSelectionText  (use this function to push text, without changes to local editor)
-export async function copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin: ThePlugin, copySelection: boolean, defaultSelectionText = ""): Promise<void> {
+// // defaultSelectionText  (use this function to push text, without changes to local editor)
+// export async function copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin: ThePlugin, copySelection: boolean, defaultSelectionText = ""): Promise<string> {
+//     const activeEditor = defaultSelectionText === "" ? getActiveView(plugin).editor : null;
+//     let selectedText = defaultSelectionText === "" ? activeEditor.getSelection() : defaultSelectionText;
+//     if (selectedText === "") selectedText = activeEditor.getLine(activeEditor.getCursor().line); //get text from current line
+//     return await displayFileLineSuggester(plugin, false, true, false, async (targetFileName, fileContentsArray, lineNumber, endLineNumber, evtFileSelected, evtFirstLine) => {
+//         await copyOrPushLineOrSelectionToNewLocation(plugin, copySelection, selectedText, targetFileName, lineNumber, fileContentsArray);
+//         if ((evtFileSelected && (evtFileSelected.ctrlKey || evtFileSelected.metaKey)) || (evtFirstLine && (evtFirstLine.ctrlKey || evtFirstLine.metaKey))) {
+//             const linesSelected = selectedText.split("\n").length;
+//             const lineCount = linesSelected > 1 ? linesSelected - 1 : 0;
+//             openFileInObsidian(plugin, targetFileName, lineNumber + 1, lineCount);
+//         }
+//         console.log(targetFileName);
+//         return targetFileName;
+//     });
+// }
+
+export async function copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin: ThePlugin, copySelection: boolean, defaultSelectionText = ""): Promise<string> {
     const activeEditor = defaultSelectionText === "" ? getActiveView(plugin).editor : null;
     let selectedText = defaultSelectionText === "" ? activeEditor.getSelection() : defaultSelectionText;
     if (selectedText === "") selectedText = activeEditor.getLine(activeEditor.getCursor().line); //get text from current line
-    await displayFileLineSuggester(plugin, false, true, false, async (targetFileName, fileContentsArray, lineNumber, endLineNumber, evtFileSelected, evtFirstLine) => {
-        await copyOrPushLineOrSelectionToNewLocation(plugin, copySelection, selectedText, targetFileName, lineNumber, fileContentsArray);
-        if ((evtFileSelected && (evtFileSelected.ctrlKey || evtFileSelected.metaKey)) || (evtFirstLine && (evtFirstLine.ctrlKey || evtFirstLine.metaKey))) {
-            const linesSelected = selectedText.split("\n").length;
-            const lineCount = linesSelected > 1 ? linesSelected - 1 : 0;
-            openFileInObsidian(plugin, targetFileName, lineNumber + 1, lineCount)
-        }
+
+    return new Promise(async (resolve) => {
+        await displayFileLineSuggester(plugin, false, true, false, async (targetFileName, fileContentsArray, lineNumber, endLineNumber, evtFileSelected, evtFirstLine) => {
+            await copyOrPushLineOrSelectionToNewLocation(plugin, copySelection, selectedText, targetFileName, lineNumber, fileContentsArray);
+            if ((evtFileSelected && (evtFileSelected.ctrlKey || evtFileSelected.metaKey)) || (evtFirstLine && (evtFirstLine.ctrlKey || evtFirstLine.metaKey))) {
+                const linesSelected = selectedText.split("\n").length;
+                const lineCount = linesSelected > 1 ? linesSelected - 1 : 0;
+                openFileInObsidian(plugin, targetFileName, lineNumber + 1, lineCount);
+            }
+            console.log(targetFileName);
+            resolve(targetFileName);
+        });
     });
 }
+
 
 // this is primarily used by the context menu for doing copy/push actions
 export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLocationAndBoomark(plugin: ThePlugin, copySelection: boolean, bookmarkText: string, evt?: MouseEvent | KeyboardEvent): Promise<void> {
@@ -122,17 +144,35 @@ export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLo
 /* !Push Text Leave Block Reference */
 
 export async function pushTextLeaveBlockReference(plugin: ThePlugin): Promise<void> {
-    //append text with a block id. Capture the block id
-    // const refIDBuffer = async (): Promise<Array<string>> => transporter.addBlockRefsToSelection(this.plugin, true, true, this.plugin.settings.blockRefAliasIndicator)
     console.log('start ptlb');
+    const activeEditor = getActiveView(plugin).editor;
+
+    // Call addBlockRefsToSelection
     const blockIds = await addBlockRefsToSelection(plugin, true);
+
+    // Get the current selection range after calling addBlockRefsToSelection
+    const selectionAfter = activeEditor.listSelections()[0];
+
+    // Get the text of the line where the selection ends
+    const lineText = activeEditor.getLine(selectionAfter.head.line);
+
+    // Calculate the new head position by adding 5 characters to the end, considering the line length
+    const newHeadCh = Math.min(selectionAfter.head.ch + 5, lineText.length);
+    const newHead = { line: selectionAfter.head.line, ch: newHeadCh };
+
+    // Set the new selection range using the anchor from selectionAfter and the calculated newHead
+    activeEditor.setSelection(selectionAfter.anchor, newHead, { scroll: false });
+
+    const pickedFile = await copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, false);
     console.log(blockIds);
-    // const results = await addBlockRefsToSelection(plugin, false);
-    // copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, copySelection)
-    // pullBlockReferenceFromAnotherFile(plugin);
-
-
+    console.log(pickedFile);
 }
+
+
+
+
+
+
 
 export async function insertLinktoCurrentFileName(plugin: ThePlugin): Promise<void> {
     getActiveView(plugin).editor.replaceSelection("[[" + getUniqueLinkPath( getActiveView(plugin).file.path ) + "]]");
