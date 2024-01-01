@@ -12,7 +12,7 @@ export default class PluginCommands {
     // commands notes
     // shortcut - MUST be unique, used as part of the Command Palette ID
     // isContextMenuItem - this is a context menu item or not
-    // cmItemEnabled - is the context menu item enabled 
+    // cmItemEnabled - is the context menu item enabled
     commands = [
         {
             caption: "Quick Capture", shortcut: "QC", group: "QuickCapture", editModeOnly: false, isContextMenuItem: false, cmItemEnabled: false, icon: "highlight-glyph",
@@ -75,6 +75,10 @@ export default class PluginCommands {
             command: async (): Promise<void> => transporter.copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(this.plugin, false)
         },
         {
+            caption: "Insert Filename and Push", shortcut: "FPT", group: "ToFile", editModeOnly: true, isContextMenuItem: true, cmItemEnabled: true, icon: "left-arrow-with-tail",
+            command: async (): Promise<void> => transporter.insertFilenameAndPush(this.plugin)
+        },
+        {
             caption: "Push line/selection to another file as a block embed", shortcut: "PLB", group: "ToFile", editModeOnly: true, isContextMenuItem: true, cmItemEnabled: true, icon: "left-arrow-with-tail",
             command: async (): Promise<void> => transporter.pushBlockReferenceToAnotherFile(this.plugin)
         },
@@ -132,7 +136,7 @@ export default class PluginCommands {
         for (const cmd of this.commands) {
             const activeView = getActiveViewType(plugin);
             let addCommand = false;
-            if (cmd.group==="replace" && activeView===ViewType.source && transporter.testIfCursorIsOnALink(this.plugin)) 
+            if (cmd.group==="replace" && activeView===ViewType.source && transporter.testIfCursorIsOnALink(this.plugin))
                 addCommand = true;
             else if (cmd.group!== "replace" &&  (cmd.editModeOnly === false || (editMode && cmd.editModeOnly)))
                 addCommand = true;
@@ -178,11 +182,11 @@ export default class PluginCommands {
         this.plugin.registerEvent(
             this.plugin.app.workspace.on("editor-menu", (menu) => {
                 menu.addSeparator();
-                for (const value of this.commands) { 
+                for (const value of this.commands) {
                     let addCommand = false;
                     if (value.cmItemEnabled === true && value.group!=="replace")
                         addCommand=true;
-                    else if (value.cmItemEnabled === true && value.group==="replace" && transporter.testIfCursorIsOnALink(this.plugin)) 
+                    else if (value.cmItemEnabled === true && value.group==="replace" && transporter.testIfCursorIsOnALink(this.plugin))
                         addCommand=true;
                     if(addCommand) {
                         menu.addItem(item => {
@@ -190,7 +194,7 @@ export default class PluginCommands {
                                 .setTitle(value.caption)
                                 .setIcon(value.icon)
                                 .onClick(async () => { await value.command() });
-                        });                        
+                        });
                     }
                 }
                 //load bookmmarks in CM

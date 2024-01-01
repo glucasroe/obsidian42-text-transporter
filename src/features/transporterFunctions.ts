@@ -15,7 +15,7 @@ export function cleanupHeaderNameForBlockReference(header: string): string {
 // optionally copies them to clipboard
 export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipbard: boolean, copyAsAlias = false, aliasText = "*"): Promise<Array<string>> {
     const activeView = getActiveView(plugin);
-    const activeEditor = activeView.editor;    
+    const activeEditor = activeView.editor;
     const f = new FileCacheAnalyzer(plugin, activeView.file.path);
     const curSels = activeEditor.listSelections();
     const blockRefs = [];
@@ -49,7 +49,7 @@ export async function addBlockRefsToSelection(plugin: ThePlugin, copyToClipbard:
     if (copyToClipbard && blockRefs.length > 0) {
         let block = "";
         const blockPrefix = copyAsAlias === false ? "!" : ""; //if alias, don't do embed preview
-        aliasText = copyAsAlias === true ? "|" + aliasText : "";    
+        aliasText = copyAsAlias === true ? "|" + aliasText : "";
         const uniqueLinkPath = getUniqueLinkPath(activeView.file.path);
         blockRefs.forEach(b => block += `${blockPrefix}[[${uniqueLinkPath}${b}${aliasText}]]\n`);
         navigator.clipboard.writeText(block).then(text => text);
@@ -70,7 +70,7 @@ export async function copyOrPushLineOrSelectionToNewLocation(plugin: ThePlugin, 
     newContents = newContents.substring(0, newContents.length - 1);
     await plugin.app.vault.adapter.write(targetFileName, newContents);
     if (copySelection === false) {//this  is  a move, so delete the selection
-        const activeEditor = getActiveView(plugin).editor;    
+        const activeEditor = getActiveView(plugin).editor;
         const currentLine = activeEditor.getCursor().line;
         const textSelection = activeEditor.getSelection();
         if (textSelection === "" || activeEditor.getLine(currentLine).length === textSelection.length)
@@ -78,7 +78,7 @@ export async function copyOrPushLineOrSelectionToNewLocation(plugin: ThePlugin, 
         else
             activeEditor.replaceSelection(""); //replace whatever is the  selection
     }
-} 
+}
 
 // Copies or pushes (transfers) the current line or selection to another file
 // copySelection = true for copy, false for move
@@ -95,7 +95,7 @@ export async function copyOrPushLineOrSelectionToNewLocationWithFileLineSuggeste
             openFileInObsidian(plugin, targetFileName, lineNumber + 1, lineCount)
         }
     });
-} 
+}
 
 // this is primarily used by the context menu for doing copy/push actions
 export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLocationAndBoomark(plugin: ThePlugin, copySelection: boolean, bookmarkText: string, evt?: MouseEvent | KeyboardEvent): Promise<void> {
@@ -105,7 +105,7 @@ export async function copyOrPushLineOrSelectionToNewLocationUsingCurrentCursorLo
     else if(bookmarkInfo.errorNumber===2)
         new Notice("File as defined in the bookmark does not exist.");
     else {
-        const activeEditor = getActiveView(plugin).editor;    
+        const activeEditor = getActiveView(plugin).editor;
         const currentLine = activeEditor.getCursor().line;
         let textSelection = activeEditor.getSelection();
         if (textSelection === "") textSelection = activeEditor.getLine(currentLine); //get text from current line
@@ -127,6 +127,34 @@ export async function copyCurrentFileNameAsLinkToNewLocation(plugin: ThePlugin, 
     } else
         copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, true, fileLink);
 }
+
+/*! Push text with filename */
+export async function insertFilenameAndPush(plugin: ThePlugin) : Promise<void>{
+    const activeView = getActiveView(plugin);
+    const activeEditor = activeView.editor;
+    const f = new FileCacheAnalyzer(plugin, activeView.file.path);
+    const curSels = activeEditor.listSelections();
+    const fileLink = `[[${getActiveView(plugin).file.basename}]]`;
+
+    console.log(activeView);
+    for (const sel of curSels) {
+        const startLine = sel.anchor.line > sel.head.line ? sel.head.line : sel.anchor.line;
+        const endLine = sel.anchor.line > sel.head.line ? sel.anchor.line : sel.head.line;
+        console.log(startLine, endLine);
+        for (let sectionCounter = 0; sectionCounter < f.details.length; sectionCounter++) {
+            const section = f.details[sectionCounter];
+            if (section.lineStart == startLine){
+                activeEditor.replaceRange(
+                    ` ${fileLink}`,
+                    { line: Number(section.position.end.line), ch: section.position.end.col },
+                    { line: Number(section.position.end.line), ch: section.position.end.col });
+            }
+        }
+    }
+    copyOrPushLineOrSelectionToNewLocationWithFileLineSuggester(plugin, false);
+}
+
+
 
 //copy a block reference of the current line to another file
 export async function pushBlockReferenceToAnotherFile(plugin: ThePlugin): Promise<void> {
@@ -154,7 +182,7 @@ export async function pushBlockReferenceToAnotherFile(plugin: ThePlugin): Promis
             }
         }
     });
-} 
+}
 
 // Pull (move) a line or lines from another file
 export async function copyOrPulLineOrSelectionFromAnotherLocation(plugin: ThePlugin, copySelection: boolean): Promise<void> {
@@ -234,11 +262,11 @@ export async function pullBlockReferenceFromAnotherFile(plugin: ThePlugin): Prom
             openFileInObsidian(plugin, targetFileName, startLine, endLine - startLine);
         }
     });
-} 
+}
 
 export function testIfCursorIsOnALink(plugin: ThePlugin): LinkCache {
     const activeView  = getActiveView(plugin);
-    const activeEditor = activeView.editor;    
+    const activeEditor = activeView.editor;
     const currentLine = activeEditor.getCursor().line;
     const cache = this.app.metadataCache.getFileCache(activeView.file);
     if (cache.links || cache.embeds || cache.headings) {
